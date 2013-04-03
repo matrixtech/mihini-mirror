@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false" name="org.eclipse.mihini.connector.AssetFactory">
+   <implementation class="org.eclipse.mihini.connector.impl.AssetFactory"/>
+   <reference cardinality="1..1" interface="org.eclipse.mihini.connector.impl.Agent" name="agent" policy="static"/>
+   <service servicefactory="true">
+      <provide interface="org.eclipse.mihini.connector.Asset"/>
+   </service>
+</scr:component>

@@ -21,12 +21,11 @@ import java.util.Map;
 
 import org.eclipse.mihini.connector.Asset;
 import org.eclipse.mihini.connector.NewSmsListener;
-import org.eclipse.mihini.connector.SmsBearer;
-import org.eclipse.mihini.connector.SmsListener;
 import org.eclipse.mihini.connector.impl.RequestIdGenerator.Request;
 import org.eclipse.mihini.connector.util.NumberUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.osgi.service.component.ComponentContext;
 
 public class Agent {
 
@@ -36,16 +35,50 @@ public class Agent {
 
 	private List<NewSmsListener> _newSmsListeners = new ArrayList<NewSmsListener>();
 
+	private Map<String, AssetImpl> _assets = new HashMap<String, AssetImpl>();
+
 	/* lock for socket's OutputStream access */
 	private static final Object LOCK_STREAM = new Object();
 
+	private AgentSocketReader _agentSocketReader;
+
+	private Thread _agentSocketReaderThread;
+
 	public Agent() {
+		this("localhost", 9999);
+	}
+
+	public Agent(String host, int port) {
 		try {
-			_requestIdGenerator = new RequestIdGenerator(256);
-			_socket = new Socket("localhost", 9999);
-			AgentSocketReader agentSocketReader = new AgentSocketReader(
-					_requestIdGenerator, _socket.getInputStream(), this);
-			new Thread(agentSocketReader).start();
+			startAgentReader(host, port);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void startAgentReader(String host, int port)
+			throws UnknownHostException, IOException {
+		_requestIdGenerator = new RequestIdGenerator(256);
+		_socket = new Socket(host, port);
+		_agentSocketReader = new AgentSocketReader(_requestIdGenerator,
+				_socket.getInputStream(), this);
+		_agentSocketReaderThread = new Thread(_agentSocketReader);
+		_agentSocketReaderThread.start();
+	}
+
+	protected void modified(ComponentContext cctx, Map<?, ?> config) {
+		_agentSocketReader.kill();
+		try {
+			_agentSocketReaderThread.join();
+			startAgentReader((String) config.get("agent.host"),
+					(Integer) config.get("agent.port"));
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -56,14 +89,16 @@ public class Agent {
 
 	}
 
-	public Asset registerAsset(String assetId) {
-		writeCommand(CommandConstants.REGISTER_COMMAND, "\"" + assetId + "\"");
-		return new AssetImpl(assetId, this);
+	public void registerAsset(AssetImpl asset) {
+		writeCommand(CommandConstants.REGISTER_COMMAND,
+				"\"" + asset.getAssetId() + "\"");
+		_assets.put(asset.getAssetId(), asset);
 	}
 
 	public void unregisterAsset(Asset asset) {
 		writeCommand(CommandConstants.UNREGISTER_COMMAND,
 				"\"" + asset.getAssetId() + "\"");
+		_assets.remove(asset.getAssetId());
 	}
 
 	public void flushPolicy(String policyName) {
@@ -147,72 +182,16 @@ public class Agent {
 				output.flush();
 
 				// request.wait();
-				System.out.println("ANSWERED!");
 			} catch (Exception e) {
+				// TODO the commmand cannot be sent, likely because there are no
+				// request# available... what should we do?
 				e.printStackTrace();
 			}
 		}
 	}
 
-	public static void main(String[] args) {
-		final Agent agent = new Agent();
-		// agent.connectToServer(10);
-
-		agent.reboot("ca va?");
-		Asset asset = agent.registerAsset("theasset");
-
-		// ((AgentImpl) agent).sendSms("+33619196101", "sdklfsf",
-		// SMS_FORMAT._8_BITS);
-
-		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("one", 20.0);
-		data.put("two", 40.0);
-		asset.pushData("", data, "now");
-
-		asset.unregister();
-
-		agent.flushPolicy("daily");
-
-		SmsBearer smsBearer = new SmsBearerImpl();
-		((SmsBearerImpl) smsBearer).setAgent(agent);
-
-		Runnable r = new Runnable() {
-			@Override
-			public void run() {
-				agent.reboot("xxx");
-				agent.reboot("xxx");
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				agent.reboot("xxx");
-				agent.reboot("xxx");
-			}
-		};
-
-		// for (int i = 0; i < 20; i++) {
-		// Thread t = new Thread(r);
-		// t.start();
-		// }
-
-		SmsListener smsListener = new SmsListener() {
-			@Override
-			public void smsReceived(String senderNumber, String payload) {
-				System.out.println("Received an SMS from:" + senderNumber);
-			}
-		};
-		smsBearer.addSmsListener("+33.*", ".*", smsListener);
-
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		smsBearer.removeSmsListener(smsListener);
-
+	public void notifyAssetData(String path, JSONObject body) {
+		AssetImpl asset = _assets.get(path);
+		// TODO
 	}
 }

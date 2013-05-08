@@ -38,7 +38,6 @@ public class RequestIdGenerator {
 		synchronized (_pendingRequests) {
 			for (int i = 0; i < _pendingRequests.length; i++) {
 				if (_pendingRequests[i] == null) {
-					System.out.println("Assigning request #" + i);
 					_pendingRequests[i] = new Request(i);
 					return _pendingRequests[i];
 				}

@@ -65,10 +65,6 @@ public class SmsBearerImpl implements SmsBearer {
 		_smsListeners.remove(smsListener);
 	}
 
-	public Agent getAgent() {
-		return _agent;
-	}
-
 	public void setAgent(Agent agent) {
 		_agent = agent;
 	}

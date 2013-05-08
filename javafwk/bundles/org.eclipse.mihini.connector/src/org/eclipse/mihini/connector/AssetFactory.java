@@ -10,17 +10,13 @@
  *******************************************************************************/
 package org.eclipse.mihini.connector;
 
-import java.util.Map;
+import org.eclipse.mihini.connector.impl.Agent;
 
-public interface Asset {
-	String getAssetId();
-
-	void unregister();
-
-	/**
-	 * Push some unstructured data to the data manager
-	 */
-	void pushData(String path, Map<String, Object> data, String queue);
-
-	// addDataListener(String prefix, DataListener dataListener);
+/**
+ * An {@link AssetFactory} is bound to an {@link Agent} behind the scenes, and
+ * allows to retrieve instances of {@link Asset} that one can call to push data,
+ * listen to commands...
+ */
+public interface AssetFactory {
+	Asset createAsset(String assetId);
 }

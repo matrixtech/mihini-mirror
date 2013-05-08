@@ -21,6 +21,7 @@ public class AssetImpl implements Asset {
 	public AssetImpl(String assetId, Agent agent) {
 		_assetId = assetId;
 		_agent = agent;
+		_agent.registerAsset(this);
 	}
 
 	@Override

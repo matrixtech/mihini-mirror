@@ -16,11 +16,14 @@ import java.io.InputStream;
 import org.eclipse.mihini.connector.util.NumberUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 public class AgentSocketReader implements Runnable {
 	private RequestIdGenerator _requestIdGenerator;
 	private InputStream _inputStream;
 	private Agent _agent;
+
+	private boolean _mustDie = false;
 
 	public AgentSocketReader(RequestIdGenerator requestIdGenerator,
 			InputStream is, Agent agent) {
@@ -31,7 +34,7 @@ public class AgentSocketReader implements Runnable {
 
 	@Override
 	public void run() {
-		while (true) {
+		while (true && !_mustDie) {
 			try {
 				// EMP header fields
 				byte[] cmdId = new byte[2];
@@ -82,19 +85,25 @@ public class AgentSocketReader implements Runnable {
 					}
 				}
 
-				// System.out.println(Arrays.toString(payloadSize));
-				// System.out.println(Arrays.toString(payload));
-				// System.out.println(new String(payload));
-
 				int commandId = NumberUtil.bytesToInt(cmdId);
+
 				switch (commandId) {
 				case CommandConstants.NEW_SMS_COMMAND:
-					System.out.println("SMS RECEIVED");
 					try {
 						JSONArray array = new JSONArray(new String(payload));
-						System.out.println(array);
 						_agent.notifySms(array.getString(0),
 								array.getString(1), array.getInt(2));
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+					break;
+				case CommandConstants.SEND_DATA_COMMAND:
+					try {
+						JSONObject o = new JSONObject(new String(payload));
+						String path = o.getString("path");
+						JSONObject body = (JSONObject) o.get("body");
+
+						_agent.notifyAssetData(path, body);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -111,6 +120,16 @@ public class AgentSocketReader implements Runnable {
 				// TODO handle exception
 			}
 
+		}
+	}
+
+	protected void kill() {
+		_mustDie = true;
+		try {
+			_inputStream.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

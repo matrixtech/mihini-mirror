@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0">
+
+	<OCD description="Mihini Agent" name="org.eclipse.mihini.connector.Agent"
+		id="org.eclipse.mihini.connector.Agent">
+		<AD name="Host" id="agent.host" requiredgoo="true" type="String"
+			default="localhost" />
+		<AD name="t" id="agent.port" required="true" type="Integer"
+			default="9999" />
+	</OCD>
+
+	<Designate pid="org.eclipse.mihini.connector.Agent">
+		<Object ocdref="org.eclipse.mihini.connector.Agent" />
+	</Designate>
+
+</metatype:MetaData>

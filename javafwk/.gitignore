@@ -5,3 +5,4 @@ target/
 workspace/
 /plugin_customization.ini
 !.project
+!build.properties

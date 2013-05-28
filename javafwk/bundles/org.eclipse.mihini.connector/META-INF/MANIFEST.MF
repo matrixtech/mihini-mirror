@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Mihini Connector
 Bundle-SymbolicName: org.eclipse.mihini.connector
-Bundle-Version: 0.8.0.qualifier
-Export-Package: org.eclipse.mihini.connector,
- org.eclipse.mihini.connector.util
+Bundle-Version: 0.9.0.qualifier
+Export-Package: org.eclipse.mihini.connector;version="0.9.0",
+ org.eclipse.mihini.connector.util;version="0.9.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Service-Component: OSGI-INF/*.xml
 Import-Package: org.json,

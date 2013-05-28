@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" configuration-policy="optional" modified="modified" name="org.eclipse.mihini.connector.Agent">
-   <implementation class="org.eclipse.mihini.connector.impl.Agent"/>
+   <implementation class="org.eclipse.mihini.connector.impl.osgi.AgentComponent"/>
    <service>
       <provide interface="org.eclipse.mihini.connector.impl.Agent"/>
    </service>
+   <property name="agent.host" type="String" value="localhost"/>
+   <property name="agent.port" type="Integer" value="9999"/>
 </scr:component>

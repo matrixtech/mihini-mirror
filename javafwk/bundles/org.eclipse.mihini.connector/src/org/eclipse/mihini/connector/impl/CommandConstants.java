@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.mihini.connector.impl;
 
+/**
+ * Constants for the EMP protocols commands
+ */
 public final class CommandConstants {
 	private CommandConstants() {
 	}
@@ -20,10 +23,10 @@ public final class CommandConstants {
 	public final static int FORCE_CONNECT_COMMAND = 4;
 	public final static int REGISTER_SMS_LISTENER_COMMAND = 7;
 	public final static int NEW_SMS_COMMAND = 8;
-	public static final int PDATA_COMMAND = 30;
-	public static final int PFLUSH_COMMAND = 32;
-	public static final int REBOOT_COMMAND = 50;
+	public final static int PDATA_COMMAND = 30;
+	public final static int PFLUSH_COMMAND = 32;
+	public final static int REBOOT_COMMAND = 50;
 	public final static int UNREGISTER_SMS_LISTENER_COMMAND = 51;
-	public static final int SEND_SMS_COMMAND = 52;
+	public final static int SEND_SMS_COMMAND = 52;
 
 }

@@ -8,21 +8,29 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.mihini.connector.impl;
+package org.eclipse.mihini.connector.impl.osgi;
 
 import org.eclipse.mihini.connector.Asset;
 import org.eclipse.mihini.connector.AssetFactory;
+import org.eclipse.mihini.connector.impl.Agent;
+import org.eclipse.mihini.connector.impl.AssetFactoryImpl;
+import org.osgi.service.component.ComponentContext;
 
-public class AssetFactoryImpl implements AssetFactory {
+public class AssetFactoryComponent implements AssetFactory {
 
-	private Agent _agent;
+	private AssetFactory _assetFactory;
 
-	public AssetFactoryImpl(Agent agent) {
-		this._agent = agent;
+	protected void activate(ComponentContext cctx) {
+		this._assetFactory = new AssetFactoryImpl(
+				(Agent) cctx.locateService("agent"));
 	}
 
-	@Override
+	protected void deactivate() {
+		_assetFactory = null;
+	}
+
 	public Asset createAsset(String assetId) {
-		return new AssetImpl(assetId, _agent);
+		return _assetFactory.createAsset(assetId);
 	}
+
 }

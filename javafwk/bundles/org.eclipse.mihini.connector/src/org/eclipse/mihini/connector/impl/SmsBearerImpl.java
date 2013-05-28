@@ -24,6 +24,10 @@ public class SmsBearerImpl implements SmsBearer {
 	private Agent _agent;
 	private Map<SmsListener, Integer> _smsListeners = new HashMap<SmsListener, Integer>();
 
+	public SmsBearerImpl(Agent agent) {
+		this._agent = agent;
+	}
+
 	@Override
 	public void sendSms(String recipientNumber, String payload,
 			SMS_FORMAT smsFormat) {
@@ -64,9 +68,4 @@ public class SmsBearerImpl implements SmsBearer {
 				new Integer(_smsListeners.get(smsListener)).toString());
 		_smsListeners.remove(smsListener);
 	}
-
-	public void setAgent(Agent agent) {
-		_agent = agent;
-	}
-
 }

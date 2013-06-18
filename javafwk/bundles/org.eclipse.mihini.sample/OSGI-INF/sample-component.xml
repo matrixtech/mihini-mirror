@@ -2,5 +2,5 @@
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="org.eclipse.mihini.sample">
    <implementation class="org.eclipse.mihini.sample.SampleComponent"/>
    <reference cardinality="1..1" interface="org.eclipse.mihini.connector.SmsBearer" name="smsBearer" policy="static"/>
-   <reference cardinality="1..1" interface="org.eclipse.mihini.connector.AssetFactory" name="assetFactory" policy="static"/>
+   <reference cardinality="1..1" interface="org.eclipse.mihini.connector.AssetFactory" name="assetFactory" policy="static" target="(assetfactory.protocol=m3da)"/>
 </scr:component>

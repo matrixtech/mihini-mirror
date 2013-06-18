@@ -32,15 +32,23 @@ public class SampleComponent {
 		AssetFactory assetFactory = (AssetFactory) cctx
 				.locateService("assetFactory");
 
-		Asset asset1 = assetFactory.createAsset("asset1");
-		Asset asset2 = assetFactory.createAsset("asset2");
+		Asset greenhouse = assetFactory.createAsset("greenhouse");
+
+		greenhouse.registerDataHandler("data.temperature", new Asset.DataHandler() {
+			@Override
+			public Object value() {
+				return 20.3;
+			}
+		});
 
 		Map<String, Object> values = new HashMap<String, Object>();
-		values.put("bar", 10);
+		values.put("temperature", 24.4);
+		values.put("luminosity", 1042);
 
 		System.out.println("Pushing data for asset1...");
-		asset1.pushData("foo", values, "now");
+		greenhouse.pushData("data", values, "now");
 
+		Asset asset2 = assetFactory.createAsset("asset2");
 		values.clear();
 		values.put("xxx", "stuff");
 		values.put("yyy", "other stuff");
@@ -48,9 +56,10 @@ public class SampleComponent {
 		System.out.println("Pushing data for asset2...");
 		asset2.pushData("", values, "now");
 
-		System.out.println("DONE! Unregistering assets...");
-		asset1.unregister();
-		asset2.unregister();
+		// System.out.println("DONE! Unregistering assets...");
+
+		// asset1.unregister();
+		// asset2.unregister();
 	}
 
 	protected void deactivate() {

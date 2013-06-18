@@ -5,4 +5,5 @@
    <service servicefactory="true">
       <provide interface="org.eclipse.mihini.connector.AssetFactory"/>
    </service>
+   <property name="assetfactory.protocol" type="String" value="m3da"/>
 </scr:component>

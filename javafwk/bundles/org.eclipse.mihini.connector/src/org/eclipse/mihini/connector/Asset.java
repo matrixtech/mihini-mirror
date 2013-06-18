@@ -13,6 +13,10 @@ package org.eclipse.mihini.connector;
 import java.util.Map;
 
 public interface Asset {
+	public interface DataHandler {
+		Object value();
+	}
+
 	String getAssetId();
 
 	void unregister();
@@ -31,6 +35,19 @@ public interface Asset {
 	 *            used
 	 */
 	void pushData(String path, Map<String, Object> data, String queue);
+
+	/**
+	 * This method allows to register a handler in order to manage requests
+	 * coming from a server to read the value of node
+	 * 
+	 * @param path
+	 *            the path of the value to read
+	 * @param handler
+	 *            a {@link DataHandler} responsible for providing the value of
+	 *            the requested data. {@link DataHandler#value()} will be called
+	 *            upon server request
+	 */
+	void registerDataHandler(String path, DataHandler handler);
 
 	// addDataListener(String prefix, DataListener dataListener);
 }

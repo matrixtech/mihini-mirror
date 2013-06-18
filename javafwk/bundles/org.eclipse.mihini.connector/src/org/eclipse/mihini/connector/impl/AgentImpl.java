@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.mihini.connector.Asset;
+import org.eclipse.mihini.connector.Asset.DataHandler;
 import org.eclipse.mihini.connector.NewSmsListener;
 import org.eclipse.mihini.connector.impl.RequestIdGenerator.Request;
 import org.eclipse.mihini.connector.util.NumberUtil;
@@ -179,7 +180,28 @@ public class AgentImpl implements Agent {
 
 	@Override
 	public void notifyAssetData(String path, JSONObject body) {
-		AssetImpl asset = _assets.get(path);
-		// TODO
+		if (path.endsWith(".commands.ReadNode")
+				&& _assets.get(path.substring(0, path.indexOf('.'))) != null) {
+			AssetImpl asset = _assets.get(path.substring(0, path.indexOf('.')));
+			try {
+				DataHandler dataHandler = asset.getDataHandlers().get(
+						body.get("1"));
+				if (dataHandler != null) {
+					Map<String, Object> map = new HashMap<String, Object>();
+					map.put((String) body.get("1"), dataHandler.value());
+					asset.pushData("", map, "now");
+				}
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		// else {
+		// ... other kind of data writings. TODO
+		// }
+
+		System.out.println("Notify asset data");
+		System.out.println("path: " + path);
+		System.out.println("body: " + body.toString());
 	}
 }

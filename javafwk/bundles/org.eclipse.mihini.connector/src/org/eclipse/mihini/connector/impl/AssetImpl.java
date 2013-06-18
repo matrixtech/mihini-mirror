@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.mihini.connector.impl;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.mihini.connector.Asset;
@@ -17,10 +18,12 @@ import org.eclipse.mihini.connector.Asset;
 public class AssetImpl implements Asset {
 	private String _assetId;
 	private Agent _agent;
+	private Map<String, DataHandler> _dataHandlers;
 
 	public AssetImpl(String assetId, Agent agent) {
 		_assetId = assetId;
 		_agent = agent;
+		_dataHandlers = new HashMap<String, Asset.DataHandler>();
 		_agent.registerAsset(this);
 	}
 
@@ -38,4 +41,14 @@ public class AssetImpl implements Asset {
 	public void pushData(String path, Map<String, Object> data, String policy) {
 		_agent.pushData(this, path, data, policy);
 	}
+
+	@Override
+	public void registerDataHandler(String path, DataHandler handler) {
+		_dataHandlers.put(path, handler);
+	}
+
+	public Map<String, DataHandler> getDataHandlers() {
+		return _dataHandlers;
+	}
+
 }

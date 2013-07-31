@@ -14,12 +14,13 @@
 local AGENT_DIR = nil
 local env = nil
 local depmodule = {}
+local depopt = nil
 
 local function loadtestwrappermodule()
     for _, dep in pairs(depmodule) do
         local mod = require ("testwrapperfwk." .. dep)
         if mod and mod.setup then
-            mod.setup(AGENT_DIR)
+            mod.setup(AGENT_DIR, depopt)
         end
     end
 end
@@ -72,12 +73,12 @@ local function run_wrapper(testname, testtype)
        loadtestwrappermodule()
     end
 
-    func(testname)
+    local status = func(testname)
 
     if #depmodule then
         unloadtestwrappermodule()
     end
-    os.exit()
+    os.exit(status)
 end
 
 local function envsetup(progname)
@@ -103,7 +104,7 @@ local function envsetup(progname)
 end
 
 local function usage()
-    print("Usage: " .. arg[0] .. " [ -t type ] [ -l dependency ] unittest")
+    print("Usage: " .. arg[0] .. " [ -t type ] [ -l dependency ] [ -o dependency_options ] unittest")
     print("Available types:\n standalone\n non-standalone")
     print("Available dependencies:")
     require 'lfs'
@@ -136,8 +137,11 @@ local function main(argv)
         elseif argv[i] == "-l" then
 	    table.insert(depmodule, argv[i+1])
             i = i + 2
-        else
-            testname = argv[i]
+        elseif argv[i] == "-o" then
+            depopt = argv[i+1]
+            i = i + 2
+	else
+	    testname = argv[i]
         end
     end
 

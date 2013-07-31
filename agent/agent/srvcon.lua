@@ -21,7 +21,7 @@ local timer       = require "timer"
 local lock        = require "sched.lock"
 local ltn12       = require "ltn12"
 local checks      = require "checks"
-local errnum      = require "status".tonumber
+local errnum      = require "returncodes".tonumber
 require 'coxpcall'
 require 'socket.url'
 require 'print'
@@ -58,14 +58,14 @@ local function dispatch_message(envelope_payload)
         elseif msg.__class == 'Message' then
             if not msg.body or not next(msg.body) then
                 log("SRVCON", "ERROR", "invalid message: message body is nil or empty, message is rejected")
-                if msg.ticketid and msg.ticketid ~= 0 then require('airvantage').acknowledge(msg.ticketid, false, "invalid message: message body is nil or empty", "now", false) end
+                if msg.ticketid and msg.ticketid ~= 0 then require('racon').acknowledge(msg.ticketid, false, "invalid message: message body is nil or empty", "now", false) end
             else
                 local name = upath.split(msg.path, 1)
                 local r, errmsg = asscon.sendcmd(name, "SendData", msg)
                 if not r then
                     --build and send a NAK to the server through a session+transport
                     log("SRVCON", "ERROR", "Failed to dispatch server message %s", sprint(msg))
-                    if msg.ticketid and msg.ticketid ~= 0 then require('airvantage').acknowledge(msg.ticketid, false, errmsg, "now", false) end
+                    if msg.ticketid and msg.ticketid ~= 0 then require('racon').acknowledge(msg.ticketid, false, errmsg, "now", false) end
                 end
             end
          elseif msg.__class == 'Response' then
@@ -93,31 +93,45 @@ local function concat_factories(factories)
     end
 end
 
-local function restore_factories(factories)
+local function rollback_session(factories, callbacks)
     for f, _ in pairs(factories) do
         M.sourcefactories[f]=true
     end
+    for f, _ in pairs(callbacks) do
+        M.pendingcallbacks[f]=true
+    end
 end
+
 
 function M.dosession()
     if lock.waiting(M) > 0 then return nil, "connection already in progress" end
     lock.lock(M)
-    local pending_factories
-    M.sourcefactories, pending_factories = { }, M.sourcefactories
+    local pending_factories, pending_callbacks
+    M.sourcefactories, M.pendingcallbacks, pending_factories, pending_callbacks =
+        { }, { }, M.sourcefactories, M.pendingcallbacks
     local source_factory = concat_factories(pending_factories)
     local status, errmsg = agent.netman.withnetwork(M.session.send, M.session, source_factory)
     if not status then
         log('SRVCON', 'ERROR', "Error while sending data to server: %s", tostring(errmsg))
-        restore_factories(pending_factories);
+        rollback_session(pending_factories, pending_callbacks)
         lock.unlock(M)
         return nil, errmsg
     end
-    for callback, _ in pairs(M.pendingcallbacks) do
+
+	-- Execute the callbacks that where registered when the
+	-- session started (meanwhile, other callbacks might have
+	-- been stacked, corresponding with sources to be sent in
+	-- the next session).
+    for callback, _ in pairs(pending_callbacks) do
         callback(status, errmsg)
     end
-    M.pendingcallbacks = { }
     lock.unlock(M)
-    return status
+
+    if status >= 200 and status <= 299 then
+        return "ok"
+    else
+        return nil, "unexpected status code " .. tostring(status)
+    end
 end
 
 -- Obsolete: former support for data sending through SMS.
@@ -151,7 +165,7 @@ end
 --- Responds to request to connect to server sent through EMP messages.
 local function EMPConnectToServer(assetid, latency)
     local s, err = M.connect(latency)
-    if not s then return errnum 'SERVER_FAILURE', err else return 0 end
+    if not s then return errnum 'COMMUNICATION_ERROR', err else return 0 end
 end
 
 --- Sets up the module according to agent.config settings.

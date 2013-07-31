@@ -21,7 +21,7 @@ local niltoken = require "niltoken"
 local upath    = require 'utils.path'
 local utable   = require 'utils.table'
 local racon    = require 'racon'
-local errnum   = require 'status'.tonumber
+local errnum   = require 'returncodes'.tonumber
 
 require 'coxpcall'
 
@@ -68,7 +68,7 @@ local function tree_default(asset, data, path)
             sprint(data), path)
     end
     local status, msg = treemgr.set(path, data)
-    if status then return 0 else return errnum 'UNKNOWN_ERROR', msg end
+    if status then return 0 else return errnum 'UNSPECIFIED_ERROR', msg end
 end
 
 --------------------------------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ local function EMPSetVariable(assetid, payload)
     local path, value = unpack(payload)
     local res, err = treemgr.set(path, value) -- ensure we don't give niltoken to treemgr
     if res then return 0
-    else return errnum 'UNKNOWN_ERROR',  (err or "unknown error") end
+    else return errnum 'UNSPECIFIED_ERROR',  (err or "unknown error") end
 end
 
 local dt_id_idx = 0
@@ -115,13 +115,30 @@ local function EMPRegisterVariable(assetid, payload)
 end
 
 local function EMPUnregisterVariable(assetid, dt_id)
-    if not dt_id then return errnum 'WRONG_PARAMS', "no devicetree id provided to unregister" end
+    if not dt_id then return errnum 'BAD_PARAMETER', "no devicetree id provided to unregister" end
     local tm_id = dt2tm[dt_id]
     dt2tm[dt_id] = nil
-    if not tm_id then return errnum 'UNKNOWN_ERROR', "no matching treemanager id found" end
+    if not tm_id then return errnum 'UNSPECIFIED_ERROR', "no matching treemanager id found" end
     local res, err = treemgr.unregister(tm_id)
     if res then return 0
-    else return errnum 'UNKNOWN_ERROR', (err or "unknown error") end
+    else return errnum 'UNSPECIFIED_ERROR', (err or "unknown error") end
+end
+
+local function rest_get_handler(env)
+   local node = env["suburl"]:gsub("/", "%.")
+   local v, l = treemgr.get(node)
+   if not v and type(l) == "string" then
+      return v, l
+   end
+   return { niltoken(v), l }
+end
+
+local function rest_set_handler(env)
+   if not env["payload"] then
+      return nil, "missing value"
+   end
+   local node = env["suburl"]:gsub("/", "%.")
+   return treemgr.set(node, env["payload"])
 end
 
 function M.init(cfg)
@@ -148,6 +165,15 @@ function M.init(cfg)
     assert(asscon.registercmd("RegisterVariable", EMPRegisterVariable))
     assert(asscon.registercmd("UnregisterVariable", EMPUnregisterVariable))
 
+    -- register rest commands
+    if type(config.rest) == "table" and config.rest.activate == true  then
+       local rest = require 'agent.rest'
+       rest.register("devicetree/[%w.]+", "GET", rest_get_handler)
+       rest.register("devicetree/[%w.]+", "PUT", rest_set_handler)
+    else
+       rest_get_handler = nil
+       rest_set_handler = nil
+    end
     M.initialized = true
 
     return "ok"

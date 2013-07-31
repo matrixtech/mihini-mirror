@@ -37,7 +37,7 @@ the application data store where data and events will be stored.
 
 The next figure illustrates the typical embedded architecture on a Linux
 target.\
-This architecture is composed of the ReadyAgent, ReadyAgent libraries,
+This architecture is composed of the Agent, the Agent libraries,
 and one or more applications.
 
 The Agent may run in a different process (as a daemon) or be
@@ -65,7 +65,7 @@ by the Agent Connector library described below.
 The user libraries is named Agent Connector libraries and addresses several
 needs:
 
--   It enables communication with the ReadyAgent. It is an abstraction
+-   It enables communication with the Agent. It is an abstraction
     of the IPC used to communicate with it
 -   It provides Device Management features like Agent tree access
     (including its configuration)
@@ -75,13 +75,13 @@ needs:
     protocol structure
 -   It abstracts system dependent features likes SMS, Reboot, etc.
 
-####3. Airvantage embedded library
+####3. Racon embedded library
 
-See [Airvantage embedded library page](Airvantage_Lua_library.html).
+See [Racon embedded library page](Racon_Lua_library.html).
 
 ####4. Code Sample
 
-The code samples show how to use the Airvantage Connector library in
+The code samples show how to use the Racon Connector library in
 different programming languages. The implemented application simulates
 an asset called "house" with two rooms. Some data and events are sent
 for those two rooms.
@@ -102,7 +102,7 @@ A specific Command listener waits for a Command reception named
 within the received command.
 
 The given code samples use as few as possible system calls in order to
-simplify the understanding of the Airvantage Connector library. All
+simplify the understanding of the Racon Connector library. All
 actions thus happen synchronously. \
  For the same reason, the time elapsing is basically simulated so that
 timestamps are not all identical. More practical applications will use

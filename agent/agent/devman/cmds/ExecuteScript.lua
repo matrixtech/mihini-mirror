@@ -13,7 +13,7 @@
 
 local ltn12 = require "ltn12"
 local http = require "socket.http"
-local hash = require "crypto.hash"
+local md5 = require "crypto.md5"
 local config = require "agent.config"
 local loader = require "utils.loader"
 
@@ -38,11 +38,11 @@ local function ExecuteScript(sys_asset, args)
     if wnet then wnet(httpgetscript) else httpgetscript() end
     assert(b and type(c)=='number' and c>=200 and c<300, string.format("error while doing http request, error: %s", b and s or tostring(c)))
 
-    local md5 = hash.new("md5")
-    for k,v in ipairs(script) do md5:update(v) end
-    local checksum = string.lower(md5:digest())
+    local h = md5()
+    for k,v in ipairs(script) do h:update(v) end
+    local hex_checksum = h:digest(false)
     signature = string.lower(signature)
-    assert(checksum == signature, string.format("corrupted script content, received %s, computed %s", signature, checksum))
+    assert(hex_checksum == signature, string.format("corrupted script content, received %s, computed %s", signature, hex_checksum))
 
     local s, err = loader.loadbuffer(script, "@"..url, true)
     assert(s, "loading err="..(err or "unknown"))

@@ -18,16 +18,13 @@
     server = {}
 
     server.serverId = "AIRVANTAGE"
-    server.retrytimes = 10
-    server.retryperiod = 60
 
     -- Determines the protocol, host, port, and optionally other things such
     -- as path, user, password
     server.url = "tcp://m2m.eclipse.org:44900"
-    --server.url = "http://localhost:8070/device/com"
-    --server.url = "http://webplt-qa.anyware-tech.com/device/com"
-    --server.url = "http://webplt-m2m.anyware-tech.com/device/com"
-    --server.url = "http://m2mop.net/device/com"
+    -- when using a local server:
+    --server.url = "tcp://localhost:44900"
+
 
     --When the device is behind a proxy this settings defines a HTTP proxy. This parameter is only relevant for HTTP transport protocol
     --server.proxy must be a URL starting by "http://".
@@ -63,6 +60,30 @@
     shell.port = 2000
     shell.editmode = "edit" -- can be "line" if the trivial line by line mode is wanted
     shell.historysize = 30  -- only valid for edit mode,
+
+    -- Rest related settings
+    rest = {}
+    rest.activate = true
+    rest.port = 8357
+
+    -- Uncomment these lines to activate
+    -- http digest authentication
+    --rest.authentication = {}
+    --rest.authentication.realm = "username@localhost"
+    -- HA1 is the MD5 sum of the string "username:realm:password"
+    --rest.authentication.ha1 = "your hash here"
+    --rest.restricted_uri = {}
+    -- Either globally
+    --rest.restricted_uri["*"] = true
+
+    -- Or per URI
+    --rest.restricted_uri["devicetree/[%w.]+"] = true
+    --rest.restricted_uri["application$"] = true
+    --rest.restricted_uri["application/[%w%.]+"] = true
+    --rest.restricted_uri["application/[%w%.]+/start"] = true
+    --rest.restricted_uri["application/[%w%.]+/stop"] = true
+    --rest.restricted_uri["application/[%w%.]+/configure"] = true
+    --rest.restricted_uri["update[/%w%?]*$"] = true
 
     -- Time related settings
     time = {}
@@ -101,7 +122,7 @@
     --network.retryperiod = 10 --use only if network.bearer.XXX.retryperiod not defined
     --network.smsfallback = "+33102345879" -- address to send outgoing sms to (e.g. server SMS reception number)
     network.bearer = {}
-    network.bearer.GPRS = {apn = "internet-entreprise", retry = 2, retryperiod = 10, automount = true}
+    network.bearer.GPRS = {apn = "yourapn", retry = 2, retryperiod = 10, automount = true}
     network.bearer.ETH = {mode = "dhcp", retry = 2, retryperiod = 10, automount = true}
     --network.bearer.ETH = {mode = "static", retry = 2, retryperiod = 50, automount = true, address = "10.0.2.87", netmask = "255.255.0.0", broadcast = "10.0.255.255", gateway= "10.0.0.254", nameserver1 = "10.6.0.224", nameserver2 = "10.6.0.225"}
 

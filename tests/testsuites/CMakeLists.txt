@@ -12,6 +12,10 @@
 ADD_LUA_LIBRARY(testsuites DESTINATION tests EXCLUDE_FROM_ALL
   tsagent.lua
   tsluafwk.lua
+  tsintegration.lua
+  integration/crypto.lua
+  integration/rest.lua
+  integration/restdigest.lua
 )
 
 ADD_LUA_LIBRARY(test_fwkemb DESTINATION tests EXCLUDE_FROM_ALL

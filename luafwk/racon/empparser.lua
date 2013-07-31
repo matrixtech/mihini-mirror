@@ -15,9 +15,8 @@
 local require = require
 local sched   = require 'sched'
 local log     = require 'log'
-local status  = require 'status'
 local yajl    = require 'yajl'
-local errnum  = require 'status' .tonumber
+local errnum  = require 'returncodes' .tonumber
 
 require 'pack'
 require 'coxpcall'
@@ -222,15 +221,15 @@ function api:send_emp_cmd_wait(cmd, payload)
     local ev, s, p = sched.wait(self, {cmd..tostring(rid), 'closed', 'ipc broken', M.cmd_timeout})
     if ev == 'closed' then
        self.inprogress[rid] = nil
-       return errnum 'SERVER_UNREACHABLE', "server unreachable"
+       return errnum 'COMMUNICATION_ERROR', "server unreachable"
     end
     if ev == 'timeout' then
        self.inprogress[rid] = "TIMEDOUT"
-       return errnum 'IPC_TIMEOUT', "timeout for ack expired"
+       return errnum 'TIMEOUT', "timeout for ack expired"
     end
     if ev == 'ipc broken' then
        self.inprogress[rid] = nil
-       return errnum 'IPC_BROKEN', "ipc broken"
+       return errnum 'CLOSED', "ipc broken"
     end
     return s, p
 end

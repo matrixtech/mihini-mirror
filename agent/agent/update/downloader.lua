@@ -12,7 +12,7 @@
 
 local common = require"agent.update.common"
 local io = require "io"
-local hash = require "crypto.hash"
+local md5_new = require "crypto.md5"
 local lfs = require "lfs"
 local ltn12 = require "ltn12"
 local http = require "socket.http"
@@ -172,7 +172,7 @@ local function do_m3da_download(dwlstate, headers, hrange)
         }
         --if the download was interrupted (user request received while using state.stepprogress),
         -- then just quit, don't use state.stepfinished, correct update state is set by state.stepprogress
-        if needtostop then log("UPDATE", "ERROR", "download: http request aborted") return "interrupted" end
+        if needtostop then log("UPDATE", "WARNING", "download: http request aborted") return "interrupted" end
         log("UPDATE", "DETAIL", "download: http request done")
         -- if we got here then http request went to its end, clean download stuff: kill periodictask.
         downloadfinalizer()
@@ -233,7 +233,7 @@ function start_m3da_download()
     data.currentupdate.updatefile=updatepath
     common.savecurrentupdate()
 
-    local md5 = hash.new("md5")
+    local md5 = md5_new()
     local md5filter = md5:filter()
 
     --we get the headers of package
@@ -367,13 +367,10 @@ function start_m3da_download()
         end -- : downloading is not needed anymore
 
 
-        local checksum = md5:digest()
-
-        --lower the character chain before comparison
-        checksum = string.lower(checksum)
+        local hex_checksum = md5:digest(false)
         data.currentupdate.infos.signature = string.lower(data.currentupdate.infos.signature)
 
-        if checksum ~= data.currentupdate.infos.signature then
+        if hex_checksum ~= data.currentupdate.infos.signature then
             return state.stepfinished("failure", 553, "Download: signature mismatch for update archive")
         end
 

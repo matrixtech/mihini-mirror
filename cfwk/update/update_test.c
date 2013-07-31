@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 #include "swi_update.h"
 #include "swi_log.h"
 #include "lua.h"
@@ -55,7 +56,7 @@ static const char *manifest_content =
 static volatile uint8_t waiting_update_notification = 1;
 
 
-static swi_status_t statusNotification(swi_update_Notification_t* indPtr)
+static rc_ReturnCode_t statusNotification(swi_update_Notification_t* indPtr)
 {
 
   SWI_LOG("UPDATE_TEST", INFO, "statusNotification: %p\n", indPtr->eventDetails);
@@ -102,40 +103,40 @@ static swi_status_t statusNotification(swi_update_Notification_t* indPtr)
       break;
   }
 
-//  swi_status_t res = swi_update_Request(SWI_UPDATE_REQ_RESUME);
+//  rc_ReturnCode_t res = swi_update_Request(SWI_UPDATE_REQ_RESUME);
 //  SWI_LOG("UPDATE_TEST", INFO, "swi_update_Request: %d\n", res)
 
-  return SWI_STATUS_OK;
+  return RC_OK;
 }
 
 static int test_update_Init()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_update_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return 1;
 
   res = swi_update_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return 1;
 
   res = swi_update_Init();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return 1;
   return 0;
 }
 
 static int test_update_Destroy()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_update_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return 1;
 
   res = swi_update_Destroy();
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return 1;
   return 0;
 }
@@ -145,24 +146,24 @@ static int test_update_Destroy()
 
 //static int test_update_Request()
 //{
-//  swi_status_t res;
+//  rc_ReturnCode_t res;
 //
 //  res = swi_update_Request(SWI_UPDATE_REQ_PAUSE);
-//  if (res != SWI_STATUS_OK)
+//  if (res != RC_OK)
 //    return 1;
 //  return 0;
 //}
 
 static int test_update_RegisterStatusNotification()
 {
-  swi_status_t res;
+  rc_ReturnCode_t res;
 
   res = swi_update_RegisterStatusNotification(NULL);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return 1;
 
   res = swi_update_RegisterStatusNotification(statusNotification);
-  if (res != SWI_STATUS_OK)
+  if (res != RC_OK)
     return 1;
 
   return 0;
@@ -185,17 +186,25 @@ static void generate_package()
   FILE *file;
 
   file = fopen("/tmp/Manifest", "w");
+  if (file == NULL) {
+    fprintf(stderr, "/tmp/Manifest: %s\n", strerror(errno));
+    exit(1);
+  }
   fwrite(manifest_content, 1, strlen(manifest_content), file);
   fclose(file);
 
   file = fopen("/tmp/update.txt", "w");
+  if (file == NULL) {
+    fprintf(stderr, "/tmp/update.txt: %s\n", strerror(errno));
+    exit(1);
+  }
   fwrite("test update", 1, strlen("test update"), file);
   fclose(file);
 
-  int ret = system("cd /tmp; tar czpf update_package.tar.gz Manifest update.txt 2>/dev/null");
-  if (ret != -1) {
-    SWI_LOG("UPDATE_TEST", ERROR, "%s: unpacking package failed\n", __FUNCTION__);
-    abort();
+  int ret = system("cd /tmp; tar czpf update_package.tar.gz Manifest update.txt");
+  if (ret == -1 || WEXITSTATUS(ret) != 0) {
+    SWI_LOG("UPDATE_TEST", ERROR, "package packing internal error: %s\n", (ret == -1) ? strerror(errno) : "wrong status code");
+    exit(1);
   }
 }
 
